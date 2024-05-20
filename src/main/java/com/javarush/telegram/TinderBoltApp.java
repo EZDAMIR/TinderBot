@@ -30,7 +30,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
             String text = loadMessage("main");
             sendTextMessage(text);
             return;
-        }sg
+        }
 
         sendTextMessage("*Привет*");
         sendTextMessage("_Привет_");
