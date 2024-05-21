@@ -30,7 +30,7 @@ import java.util.List;
 
 public class MultiSessionTelegramBot extends TelegramLongPollingBot {
 
-    public static final String LANGUAGE_CODE = "ru";
+    public static final String LANGUAGE_CODE = null;
     private String name;
     private String token;
 

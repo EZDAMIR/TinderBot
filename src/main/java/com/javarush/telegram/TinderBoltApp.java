@@ -14,7 +14,10 @@ import java.util.ArrayList;
 public class TinderBoltApp extends MultiSessionTelegramBot {
     public static final String TELEGRAM_BOT_NAME = "Tinder_AI_KZ_Bot"; //TODO: добавь имя бота в кавычках
     public static final String TELEGRAM_BOT_TOKEN = "6813312046:AAGXV7YorAtZmVwQIvOCWBESX0pTdBo83Vw"; //TODO: добавь токен бота в кавычках
-    public static final String OPEN_AI_TOKEN = "chat-gpt-token"; //TODO: добавь токен ChatGPT в кавычках
+    public static final String OPEN_AI_TOKEN = "sk-proj-C7DBdRdA7RvjnXSQ8RhST3BlbkFJZKwfS3Qfzb5p15Wnxds8"; //TODO: добавь токен ChatGPT в кавычках
+
+    private final ChatGPTService chatGPT = new ChatGPTService(OPEN_AI_TOKEN);
+    private DialogMode currentMode = null;
 
     public TinderBoltApp() {
         super(TELEGRAM_BOT_NAME, TELEGRAM_BOT_TOKEN);
@@ -24,24 +27,74 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         //TODO: основной функционал бота будем писать здесь
         String message = getMessageText();
 
-
         if(message.equals("/start")){
+            currentMode = DialogMode.MAIN;
             sendPhotoMessage("main");
             String text = loadMessage("main");
+            sendTextMessage(text);
+
+            showMainMenu("главное меню бота", "/start",
+                    "генерация Tinder-профля \uD83D\uDE0E", "/profile",
+                    "сообщение для знакомства \uD83E\uDD70", "/opener",
+                    "переписка от вашего имени \uD83D\uDE08", "/message",
+                    "переписка со звездами \uD83D\uDD25", "/date",
+                    "задать вопрос чату GPT \uD83E\uDDE0","/gpt");
+            return;
+        }
+        if(message.equals("/gpt")){
+            currentMode = DialogMode.GPT;
+            sendPhotoMessage("gpt");
+            String text = loadMessage("gpt");
             sendTextMessage(text);
             return;
         }
 
-        sendTextMessage("*Привет*");
-        sendTextMessage("_Привет_");
+        if(currentMode == DialogMode.GPT){
+            String prompt = loadPrompt("gpt");
+            String answer = chatGPT.sendMessage(prompt, message);
+            sendTextMessage(answer);
+            return;
+        }
 
-        sendTextMessage("Вы написали :" + message);
+        if(message.equals("/date")){
+            currentMode = DialogMode.DATE;
+            sendPhotoMessage("date");
+            sendTextButtonsMessage("Выберите девушку, которую хотите пригласить на свидание",
+                    "Ариана Гранде", "date_grande",
+                    "Марго Робби", "date_robbie",
+                    "Зендея", "date_zendaya",
+                    "Райан Гоослинг", "date_gosling",
+                    "Том Харди", "date_hardy"
+                    );
+            return;
+        }
 
-        sendTextButtonsMessage("Выберите режим работы",
+        if(currentMode == DialogMode.DATE){
+            String query = getCallbackQueryButtonKey();
+            if(query.startsWith("date_")){
+                sendPhotoMessage(query);
+                sendTextMessage("Отличный выбор! \n Твоя задача пригласить девушку/парня на ❤\uFE0F за 5 сообщений");
+
+                String prompt = loadPrompt(query);
+                chatGPT.setPrompt(prompt);
+                return;
+            }
+
+
+            String answer = chatGPT.addMessage(message);
+            sendTextMessage(answer);
+            return;
+        }
+
+        sendTextMessage("*Привет!*");
+        sendTextMessage("*_Привет!*_");
+
+        sendTextMessage("Вы написали " + message);
+
+        sendTextButtonsMessage("Выберите режим работы:",
                 "Старт", "start",
-                "стоп", "stop");
-
-
+                "Стоп", "stop"
+                );
     }
 
     public static void main(String[] args) throws TelegramApiException {
