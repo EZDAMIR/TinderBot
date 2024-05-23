@@ -1,29 +1,26 @@
 package com.javarush.telegram;
 
-import com.javarush.telegram.ChatGPTService;
-import com.javarush.telegram.DialogMode;
-import com.javarush.telegram.MultiSessionTelegramBot;
-import com.javarush.telegram.UserInfo;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.ArrayList;
 
 public class TinderBoltApp extends MultiSessionTelegramBot {
-    public static final String TELEGRAM_BOT_NAME = "Tinder_AI_KZ_Bot"; //TODO: добавь имя бота в кавычках
-    public static final String TELEGRAM_BOT_TOKEN = "6813312046:AAGXV7YorAtZmVwQIvOCWBESX0pTdBo83Vw"; //TODO: добавь токен бота в кавычках
-    public static final String OPEN_AI_TOKEN = "sk-proj-C7DBdRdA7RvjnXSQ8RhST3BlbkFJZKwfS3Qfzb5p15Wnxds8"; //TODO: добавь токен ChatGPT в кавычках
+    public static final String TELEGRAM_BOT_NAME = Config.get("TELEGRAM_BOT_NAME"); //TODO: добавь имя бота в файле config.properties
+    public static final String TELEGRAM_BOT_TOKEN = Config.get("TELEGRAM_BOT_TOKEN"); //TODO: добавь токен бота в config.properties
+    public static final String OPEN_AI_TOKEN = Config.get("OPEN_AI_TOKEN"); //TODO: добавь токен ChatGPT в config.properties
 
     private final ChatGPTService chatGPT = new ChatGPTService(OPEN_AI_TOKEN);
     private DialogMode currentMode = null;
 
-    private ArrayList<String> list = new ArrayList<>();
+    private final ArrayList<String> list = new ArrayList<>();
 
     public TinderBoltApp() {
         super(TELEGRAM_BOT_NAME, TELEGRAM_BOT_TOKEN);
     }
+
     @Override
     public void onUpdateEventReceived(Update update) {
         //TODO: основной функционал бота будем писать здесь
@@ -53,7 +50,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
 
         if(currentMode == DialogMode.GPT){
             String prompt = loadPrompt("gpt");
-            Message msg = sendTextMessage("Подождите пару секунд - ChatGPT думает...");
+            sendTextMessage("Подождите пару секунд - ChatGPT думает...");
             String answer = chatGPT.sendMessage(prompt, message);
             sendTextMessage(answer);
             return;
@@ -79,14 +76,14 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
             String query = getCallbackQueryButtonKey();
             if(query.startsWith("date_")){
                 sendPhotoMessage(query);
-                sendTextMessage(" Отличный выбор! \nТвоя задача пригласить девушку/парня на ❤\uFE0F за 5 сообщений");
+                sendTextMessage(" Отличный выбор! \nТвоя задача пригласить девушку/парня на ❤️ за 5 сообщений");
 
                 String prompt = loadPrompt(query);
                 chatGPT.setPrompt(prompt);
                 return;
             }
 
-            Message msg = sendTextMessage("Подождите пару секунд - ChatGPT думает...");
+            sendTextMessage("Подождите пару секунд - ChatGPT думает...");
             String answer = chatGPT.addMessage(message);
             sendTextMessage(answer);
             return;
@@ -109,7 +106,7 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
                 String prompt = loadPrompt(query);
                 String userChatHistory = String.join("\n\n", list);
 
-                Message msg = sendTextMessage("Подождите пару секунд - ChatGPT думает...");
+                sendTextMessage("Подождите пару секунд - ChatGPT думает...");
                 String answer = chatGPT.sendMessage(prompt, userChatHistory);
                 sendTextMessage(answer);
                 return;
